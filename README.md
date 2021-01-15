@@ -23,7 +23,7 @@ What you need:
  - Dragino LoRa GPS Shield
  - power source for powering Arduino
 
-Put together the hardware as described in the vendor's manual.
+Put together the hardware as described in the vendor's manual: Just put the shield on top of your Arduino Uno.
 
 Create an application in The Things Network Console and add a new device. Use ABP as activation method. Disable Frame Counter Checks.
 
@@ -36,7 +36,12 @@ values in the code according to match the device details you just created in the
 
 Adjust the channel configuration if you use it outside EU.
 
-Program the application to your Arduino Uno. If you have problems while programming, try pressing the reset button of the Shield during programming.
+Compile the Arduino sketch. You need to install the libraries [TinyGPS](https://github.com/neosarchizo/TinyGPS) and [MCCI LoRaWAN LMIC Library](https://github.com/mcci-catena/arduino-lmic). Don't forget to configure the used LoRaWAN frequencies by commenting/uncommenting the corresponding line in project_config/lmic_project_config.h of the LMIC Library in your local libraries directory. For EU868, comment CFG_us915 and uncomment CFG_eu868.
+
+    #define CFG_eu868 1
+    //#define CFG_us915 1
+
+Program the application to your Arduino Uno. If you have problems while programming, remove the GPS RX/TX jumpers from the Dragino shield while programming.
 
 In The Things Network Console you can use this code to decode uplink messages:
 
@@ -45,16 +50,16 @@ In The Things Network Console you can use this code to decode uplink messages:
         // (array) of bytes to an object of fields.
         var decoded = {};
         // if (port === 1) decoded.led = bytes[0];
-        decoded.lat = ((bytes[0] << 16) >>> 0) + ((bytes[1] << 8) >>> 0) + bytes[2];
-        decoded.lat = (decoded.lat / 16777215.0 * 180) - 90;
-        decoded.lon = ((bytes[3] << 16) >>> 0) + ((bytes[4] << 8) >>> 0) + bytes[5];
-        decoded.lon = (decoded.lon / 16777215.0 * 360) - 180;
+        decoded.latitude = ((bytes[0] << 16) >>> 0) + ((bytes[1] << 8) >>> 0) + bytes[2];
+        decoded.latitude = (decoded.latitude / 16777215.0 * 180) - 90;
+        decoded.longitude = ((bytes[3] << 16) >>> 0) + ((bytes[4] << 8) >>> 0) + bytes[5];
+        decoded.longitude = (decoded.longitude / 16777215.0 * 360) - 180;
         var altValue = ((bytes[6] << 8) >>> 0) + bytes[7];
         var sign = bytes[6] & (1 << 7);
         if (sign) {
-            decoded.alt = 0xFFFF0000 | altValue;
+            decoded.altitude = 0xFFFF0000 | altValue;
         } else {
-            decoded.alt = altValue;
+            decoded.altitude = altValue;
         }
         decoded.hdop = bytes[8] / 10.0;
         return decoded;
@@ -83,14 +88,12 @@ Debug mode enables debugging of the reception of GPS data via SoftSerial. On Ard
     #define DEBUG_SS
 
 ## Integration to ttnmapper.org
-Create an Access Key for TTN Mapper in your TTN application. Send a message to the owner of TTN Mapper including your application name and access key. You find the details in the Contact menu at http://ttnmapper.org.
-
-As soon as you get confirmation your data will automatically show up.
+Create an TTN Mapper integration in your TTN application. Please use an experiment for testing and remove the experiment string once you are ready to contribute to the main map. See the [TTN Mapper FAQ](https://ttnmapper.org/faq/) for details.
 
 # FAQ & known problems
 
 ##### I get an error when trying to program the Arduino, what to do?
-Press the reset button of the Shield while programming.
+Remove the GPS jumpers on the Dragino shield while programming. Don't forget to install them again once programming is finished.
 
 ##### I only see packets received by the gateway but not in the application
 Check that you have disabled Frame Counter Checks in the device configuration of TTN Console.
@@ -101,14 +104,6 @@ The LoRa GPS tracker transmits on the 3 default channels of LMIC (EU868). You ca
     // disable channels not known to single channel gateways
     LMIC_disableChannel(1);  // uncomment to disable channel 1
     LMIC_disableChannel(2);  // uncomment to disable channel 2
-    [...]
-
-##### I want to transmit on all available channels, is this possible?
-The LoRa GPS tracker transmits on the 3 default channels of LMIC (EU868). You can remove the comments from the channel definition to enable additional channels:
-
-    // LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
-    // LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);
-    // LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);
     [...]
 
 ##### Can I use this code also with other LoRa boards?
