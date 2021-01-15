@@ -162,7 +162,7 @@ void setup() {
   #endif
   os_init();
   LMIC_reset();
-  LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
+  LMIC_setSession (0x13, DEVADDR, NWKSKEY, APPSKEY);
   // Set up the channels used by the Things Network, which corresponds
   // to the defaults of most gateways. Without this, only three base
   // channels from the LoRaWAN specification are used
