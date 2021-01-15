@@ -1,4 +1,4 @@
-#include <lmic.h>
+#include <arduino_lmic.h>
 #include <hal/hal.h>
 #include <TinyGPS.h>
 
