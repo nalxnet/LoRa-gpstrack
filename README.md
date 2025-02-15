@@ -36,8 +36,9 @@ values in the code according to match the device details you just created in the
 
 Adjust the channel configuration if you use it outside EU.
 
-Compile the Arduino sketch. You need to install the libraries [TinyGPS](https://github.com/neosarchizo/TinyGPS) and [MCCI LoRaWAN LMIC Library](https://github.com/mcci-catena/arduino-lmic). Don't forget to configure the used LoRaWAN frequencies by commenting/uncommenting the corresponding line in project_config/lmic_project_config.h of the LMIC Library in your local libraries directory. For EU868, comment CFG_us915 and uncomment CFG_eu868.
+Compile the Arduino sketch. You need to install the libraries [TinyGPS (latest)](https://github.com/neosarchizo/TinyGPS) and [MCCI LoRaWAN LMIC Library (3.3.0)](https://github.com/mcci-catena/arduino-lmic) including its dependencies. Don't forget to configure the used LoRaWAN spec version and frequencies by commenting/uncommenting the corresponding line in project_config/lmic_project_config.h of the LMIC Library in your local libraries directory. For EU868, comment CFG_us915 and uncomment CFG_eu868.
 
+    #define LMIC_LORAWAN_SPEC_VERSION   LMIC_LORAWAN_SPEC_VERSION_1_0_2
     #define CFG_eu868 1
     //#define CFG_us915 1
 
@@ -45,11 +46,9 @@ Program the application to your Arduino Uno. If you have problems while programm
 
 In The Things Network Console you can use this code to decode uplink messages:
 
-    function Decoder(bytes, port) {
-        // Decode an uplink message from a buffer
-        // (array) of bytes to an object of fields.
+    function decodeUplink(input) {
+        var bytes = input.bytes;
         var decoded = {};
-        // if (port === 1) decoded.led = bytes[0];
         decoded.latitude = ((bytes[0] << 16) >>> 0) + ((bytes[1] << 8) >>> 0) + bytes[2];
         decoded.latitude = (decoded.latitude / 16777215.0 * 180) - 90;
         decoded.longitude = ((bytes[3] << 16) >>> 0) + ((bytes[4] << 8) >>> 0) + bytes[5];
@@ -62,7 +61,11 @@ In The Things Network Console you can use this code to decode uplink messages:
             decoded.altitude = altValue;
         }
         decoded.hdop = bytes[8] / 10.0;
-        return decoded;
+        return {
+          data: decoded,
+          warnings: [],
+          errors: []
+        };
     }
 
 
